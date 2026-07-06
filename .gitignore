@@ -1,0 +1,99 @@
+###########################################################
+# Enterprise Xperience Demo
+# Xperience by Kentico 31
+###########################################################
+
+############################
+# Visual Studio
+############################
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+############################
+# Rider / VS Code
+############################
+.idea/
+.vscode/
+
+############################
+# Build folders
+############################
+[Bb]in/
+[Oo]bj/
+Debug/
+Release/
+
+############################
+# NuGet
+############################
+packages/
+*.nupkg
+
+############################
+# Logs
+############################
+logs/
+*.log
+
+############################
+# IIS Publish
+############################
+publish/
+artifacts/
+
+############################
+# Database
+############################
+*.mdf
+*.ldf
+*.bak
+
+############################
+# SQL LocalDB
+############################
+*.dbmdl
+
+############################
+# Windows
+############################
+Thumbs.db
+Desktop.ini
+
+############################
+# Environment files
+############################
+.env
+.env.*
+
+############################
+# App Settings
+############################
+
+# Never commit production settings
+appsettings.Production.json
+
+############################
+# Xperience App_Data
+############################
+
+# Ignore everything inside App_Data
+src/KenticoSample.Web/App_Data/*
+
+# But KEEP CI Repository
+!src/KenticoSample.Web/App_Data/CIRepository/
+!src/KenticoSample.Web/App_Data/CIRepository/**
+
+############################
+# Backup folders
+############################
+backups/
+
+############################
+# Temporary
+############################
+*.tmp
+*.cache
+*.pid
