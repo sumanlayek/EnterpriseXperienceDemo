@@ -14,12 +14,11 @@ permissions:
 
 jobs:
   build:
-    name: Build Solution
+    name: Build Xperience Solution
 
     runs-on: windows-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -38,15 +37,17 @@ jobs:
         run: dotnet build src/KenticoSample.Web.sln --configuration Release --no-restore
 
       - name: Publish Web Application
-        run: >
-          dotnet publish
-          src/KenticoSample.Web/KenticoSample.Web.csproj
-          --configuration Release
-          --no-build
-          --output publish
+        run: dotnet publish src/KenticoSample.Web/KenticoSample.Web.csproj --configuration Release --no-build --output publish
+
+      - name: Verify Xperience CI Repository
+        run: |
+          if (!(Test-Path "src/KenticoSample.Web/App_Data/CIRepository/repository.config")) {
+              Write-Error "Xperience CI Repository not found."
+          }
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: KenticoSample.Web
           path: publish
+          retention-days: 7
