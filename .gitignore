@@ -86,6 +86,9 @@ src/KenticoSample.Web/App_Data/*
 !src/KenticoSample.Web/App_Data/CIRepository/
 !src/KenticoSample.Web/App_Data/CIRepository/**
 
+# Xperience CI lock files
+src/KenticoSample.Web/App_Data/CIRepository/.lock/
+
 ############################
 # Backup folders
 ############################
