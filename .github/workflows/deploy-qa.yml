@@ -1,0 +1,41 @@
+name: Deploy to QA
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: >
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'develop'
+      }}
+
+    runs-on: windows-latest
+
+    environment:
+      name: QA
+
+    steps:
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: KenticoSample.Web
+          path: publish
+
+      - name: Display Published Files
+        shell: pwsh
+        run: |
+          Get-ChildItem publish -Recurse
+
+      - name: QA Deployment Placeholder
+        shell: pwsh
+        run: |
+          Write-Host "Deploying KenticoSample.Web to QA..."
+          Write-Host "This is where IIS deployment will happen."
