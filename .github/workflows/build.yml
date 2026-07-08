@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - develop
+      - feature/**
+  pull_request:
+    branches:
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build Xperience Solution
+
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: src/global.json
+
+      - name: Display .NET Info
+        shell: pwsh
+        run: dotnet --info
+
+      - name: Restore NuGet Packages
+        shell: pwsh
+        run: dotnet restore src/KenticoSample.Web.sln
+
+      - name: Build Solution
+        shell: pwsh
+        run: dotnet build src/KenticoSample.Web.sln --configuration Release --no-restore
+
+      - name: Publish Web Application
+        shell: pwsh
+        run: |
+          dotnet publish `
+            src/KenticoSample.Web/KenticoSample.Web.csproj `
+            --configuration Release `
+            --no-build `
+            --output publish
+
+      - name: Verify Xperience CI Repository
+        shell: pwsh
+        run: |
+          if (!(Test-Path "src/KenticoSample.Web/App_Data/CIRepository/repository.config")) {
+              throw "Xperience CI Repository not found."
+          }
+
+      - name: Upload Published Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KenticoSample.Web
+          path: publish
+          retention-days: 7

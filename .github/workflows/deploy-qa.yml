@@ -1,0 +1,57 @@
+name: Deploy to QA
+
+on:
+  workflow_run:
+    workflows:
+      - Build
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy QA
+
+    if: >
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'develop'
+      }}
+
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+
+    environment:
+      name: QA
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifact
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          run_id: ${{ github.event.workflow_run.id }}
+          name: KenticoSample.Web
+          path: publish
+
+      - name: Verify Publish Folder
+        shell: pwsh
+        run: |
+          if (!(Test-Path ".\publish")) {
+              throw "Publish folder not found."
+          }
+
+          Get-ChildItem .\publish -Recurse
+
+      - name: Deploy QA
+        shell: pwsh
+        run: |
+          .\deployment\Deploy.ps1 `
+            -EnvironmentFile ".\deployment\environments\QA.json" `
+            -PublishFolder ".\publish"

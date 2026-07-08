@@ -1,0 +1,8 @@
+{
+  "EnvironmentName": "UAT",
+  "SitePath": "C:\\Sites\\UAT\\KenticoSample.Web",
+  "BackupPath": "C:\\Backups\\UAT",
+  "ApplicationPool": "UAT",
+  "ConfigurationFile": "appsettings.UAT.Deployment.json",
+  "HealthCheckUrl": "http://localhost:8003"
+}

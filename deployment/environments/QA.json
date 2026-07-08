@@ -1,0 +1,8 @@
+{
+  "EnvironmentName": "QA",
+  "SitePath": "C:\\Sites\\QA\\KenticoSample.Web",
+  "BackupPath": "C:\\Backups\\QA",
+  "ApplicationPool": "QA",
+  "ConfigurationFile": "appsettings.QA.Deployment.json",
+  "HealthCheckUrl": "http://localhost:8002"
+}

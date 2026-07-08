@@ -1,0 +1,8 @@
+{
+  "EnvironmentName": "Production",
+  "SitePath": "C:\\Sites\\Production\\KenticoSample.Web",
+  "BackupPath": "C:\\Backups\\Production",
+  "ApplicationPool": "Production",
+  "ConfigurationFile": "appsettings.Production.Deployment.json",
+  "HealthCheckUrl": "http://localhost:8004"
+}
