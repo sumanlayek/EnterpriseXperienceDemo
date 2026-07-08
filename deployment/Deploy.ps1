@@ -1,4 +1,5 @@
-param(
+param
+(
     [Parameter(Mandatory = $true)]
     [string]$EnvironmentFile,
 
@@ -6,169 +7,499 @@ param(
     [string]$PublishFolder
 )
 
+#=========================================================
+# Deployment Engine
+# Version : 1.1.0
+#=========================================================
+
 $ErrorActionPreference = "Stop"
 
 Import-Module WebAdministration
 
-Write-Host ""
-Write-Host "=========================================="
-Write-Host " Xperience Deployment Engine"
-Write-Host "=========================================="
-Write-Host ""
+#---------------------------------------------------------
+# Global Variables
+#---------------------------------------------------------
 
-#-------------------------------------------------------
+$DeploymentVersion = "1.1.0"
+
+$DeploymentId = Get-Date -Format "yyyyMMdd_HHmmss"
+
+$DeploymentStartTime = Get-Date
+
+$DeploymentSucceeded = $false
+
+$RollbackSucceeded = $false
+
+$BackupFolder = $null
+
+$config = $null
+
+$EnvironmentName = ""
+$SitePath = ""
+$BackupPath = ""
+$AppPool = ""
+$ConfigFile = ""
+$HealthCheckUrl = ""
+
+#---------------------------------------------------------
+# Logging
+#---------------------------------------------------------
+
+function Write-Section
+{
+    param([string]$Message)
+
+    Write-Host ""
+    Write-Host "=================================================="
+    Write-Host " $Message"
+    Write-Host "=================================================="
+    Write-Host ""
+}
+
+function Write-Info
+{
+    param([string]$Message)
+
+    Write-Host "[INFO ] $Message"
+}
+
+function Write-WarningLog
+{
+    param([string]$Message)
+
+    Write-Host "[WARN ] $Message" -ForegroundColor Yellow
+}
+
+function Write-Success
+{
+    param([string]$Message)
+
+    Write-Host "[ OK  ] $Message" -ForegroundColor Green
+}
+
+function Write-ErrorLog
+{
+    param([string]$Message)
+
+    Write-Host "[FAIL ] $Message" -ForegroundColor Red
+}
+
+Write-Section "Xperience Deployment Engine"
+
+Write-Info "Version        : $DeploymentVersion"
+Write-Info "Deployment Id  : $DeploymentId"
+Write-Info "Started        : $DeploymentStartTime"
+
+#---------------------------------------------------------
 # Read Environment Configuration
-#-------------------------------------------------------
+#---------------------------------------------------------
 
-if (!(Test-Path $EnvironmentFile))
+function ReadConfiguration
 {
-    throw "Environment configuration file not found: $EnvironmentFile"
-}
+    Write-Section "Loading Configuration"
 
-$config = Get-Content $EnvironmentFile -Raw | ConvertFrom-Json
-
-$EnvironmentName = $config.EnvironmentName
-$SitePath         = $config.SitePath
-$BackupPath       = $config.BackupPath
-$AppPool          = $config.ApplicationPool
-$ConfigFile       = $config.ConfigurationFile
-$HealthCheckUrl   = $config.HealthCheckUrl
-
-Write-Host "Environment : $EnvironmentName"
-Write-Host "Site Path   : $SitePath"
-Write-Host "Backup Path : $BackupPath"
-Write-Host "App Pool    : $AppPool"
-Write-Host ""
-
-#-------------------------------------------------------
-# Validate Paths
-#-------------------------------------------------------
-
-if (!(Test-Path $PublishFolder))
-{
-    throw "Publish folder does not exist."
-}
-
-if (!(Test-Path $SitePath))
-{
-    throw "Deployment folder does not exist."
-}
-
-if (!(Test-Path $BackupPath))
-{
-    New-Item `
-        -ItemType Directory `
-        -Path $BackupPath | Out-Null
-}
-
-#-------------------------------------------------------
-# Backup Current Deployment
-#-------------------------------------------------------
-
-$TimeStamp = Get-Date -Format "yyyyMMdd_HHmmss"
-
-$BackupFolder = Join-Path $BackupPath $TimeStamp
-
-Write-Host "Creating backup..."
-
-Copy-Item `
-    -Path $SitePath `
-    -Destination $BackupFolder `
-    -Recurse `
-    -Force
-
-#-------------------------------------------------------
-# Stop IIS
-#-------------------------------------------------------
-
-Write-Host ""
-Write-Host "Stopping Application Pool..."
-
-Stop-WebAppPool $AppPool
-
-#-------------------------------------------------------
-# Clean Deployment Folder
-#-------------------------------------------------------
-
-Write-Host ""
-Write-Host "Cleaning Deployment Folder..."
-
-Get-ChildItem $SitePath -Force |
-Where-Object {
-    $_.Name -ne "App_Data"
-} |
-Remove-Item `
-    -Recurse `
-    -Force
-
-#-------------------------------------------------------
-# Copy New Files
-#-------------------------------------------------------
-
-Write-Host ""
-Write-Host "Copying Published Files..."
-
-Copy-Item `
-    "$PublishFolder\*" `
-    $SitePath `
-    -Recurse `
-    -Force
-
-#-------------------------------------------------------
-# Apply Environment Configuration
-#-------------------------------------------------------
-
-Write-Host ""
-Write-Host "Applying Configuration..."
-
-Copy-Item `
-    "$SitePath\$ConfigFile" `
-    "$SitePath\appsettings.json" `
-    -Force
-
-#-------------------------------------------------------
-# Start IIS
-#-------------------------------------------------------
-
-Write-Host ""
-Write-Host "Starting Application Pool..."
-
-Start-WebAppPool $AppPool
-
-Start-Sleep -Seconds 5
-
-#-------------------------------------------------------
-# Health Check
-#-------------------------------------------------------
-
-Write-Host ""
-Write-Host "Checking Website..."
-
-try
-{
-    $response = Invoke-WebRequest `
-        -Uri $HealthCheckUrl `
-        -UseBasicParsing `
-        -TimeoutSec 30
-
-    if ($response.StatusCode -eq 200)
+    if (!(Test-Path $EnvironmentFile))
     {
-        Write-Host ""
-        Write-Host "=========================================="
-        Write-Host " Deployment Successful"
-        Write-Host "=========================================="
+        throw "Environment configuration file not found: $EnvironmentFile"
+    }
+
+    $script:config = Get-Content `
+        $EnvironmentFile `
+        -Raw |
+        ConvertFrom-Json
+
+    $script:EnvironmentName = $config.EnvironmentName
+    $script:SitePath        = $config.SitePath
+    $script:BackupPath      = $config.BackupPath
+    $script:AppPool         = $config.ApplicationPool
+    $script:ConfigFile      = $config.ConfigurationFile
+    $script:HealthCheckUrl  = $config.HealthCheckUrl
+
+    Write-Info "Environment : $EnvironmentName"
+    Write-Info "Site Path   : $SitePath"
+    Write-Info "Backup Path : $BackupPath"
+    Write-Info "App Pool    : $AppPool"
+}
+
+#---------------------------------------------------------
+# Validate Deployment
+#---------------------------------------------------------
+
+function ValidateDeployment
+{
+    Write-Section "Validating Deployment"
+
+    if (!(Test-Path $PublishFolder))
+    {
+        throw "Publish folder does not exist."
+    }
+
+    Write-Success "Publish folder found."
+
+    if (!(Test-Path $SitePath))
+    {
+        throw "Deployment folder does not exist."
+    }
+
+    Write-Success "Deployment folder found."
+
+    if (!(Test-Path $BackupPath))
+    {
+        Write-WarningLog "Backup folder does not exist."
+
+        New-Item `
+            -ItemType Directory `
+            -Path $BackupPath | Out-Null
+
+        Write-Success "Backup folder created."
     }
     else
     {
-        throw "Unexpected HTTP Status: $($response.StatusCode)"
+        Write-Success "Backup folder found."
     }
+
+    if (!(Test-Path "$SitePath\$ConfigFile"))
+    {
+        throw "Configuration file '$ConfigFile' was not found."
+    }
+
+    Write-Success "Configuration file found."
+}
+
+#---------------------------------------------------------
+# Backup Deployment
+#---------------------------------------------------------
+
+function Backup-Deployment
+{
+    Write-Section "Creating Backup"
+
+    $TimeStamp = Get-Date -Format "yyyyMMdd_HHmmss"
+
+    $script:BackupFolder = Join-Path $BackupPath $TimeStamp
+
+    Copy-Item `
+        -Path $SitePath `
+        -Destination $BackupFolder `
+        -Recurse `
+        -Force
+
+    Write-Success "Backup created."
+
+    Write-Info "Backup Folder : $BackupFolder"
+}
+
+#---------------------------------------------------------
+# Stop Application Pool
+#---------------------------------------------------------
+
+function Stop-ApplicationPool
+{
+    Write-Section "Stopping Application Pool"
+
+    $state = (Get-WebAppPoolState -Name $AppPool).Value
+
+    if ($state -eq "Started")
+    {
+        Stop-WebAppPool -Name $AppPool
+
+        Write-Success "Application Pool stopped."
+    }
+    else
+    {
+        Write-WarningLog "Application Pool already stopped."
+    }
+}
+
+#---------------------------------------------------------
+# Start Application Pool
+#---------------------------------------------------------
+
+function Start-ApplicationPool
+{
+    Write-Section "Starting Application Pool"
+
+    $state = (Get-WebAppPoolState -Name $AppPool).Value
+
+    if ($state -ne "Started")
+    {
+        Start-WebAppPool -Name $AppPool
+
+        Write-Success "Application Pool started."
+    }
+    else
+    {
+        Write-WarningLog "Application Pool already running."
+    }
+
+    Start-Sleep -Seconds 5
+}
+
+#---------------------------------------------------------
+# Clean Deployment Folder
+#---------------------------------------------------------
+
+function Clear-DeploymentFolder
+{
+    Write-Section "Cleaning Deployment Folder"
+
+    Get-ChildItem `
+        $SitePath `
+        -Force |
+    Where-Object {
+        $_.Name -ne "App_Data"
+    } |
+    Remove-Item `
+        -Recurse `
+        -Force
+
+    Write-Success "Deployment folder cleaned."
+}
+
+#---------------------------------------------------------
+# Copy Deployment Files
+#---------------------------------------------------------
+
+function Copy-DeploymentFiles
+{
+    Write-Section "Copying Deployment Files"
+
+    $LogFile = Join-Path $env:TEMP "robocopy.log"
+
+    robocopy `
+        $PublishFolder `
+        $SitePath `
+        /MIR `
+        /R:2 `
+        /W:2 `
+        /NFL `
+        /NDL `
+        /NP `
+        /LOG:$LogFile
+
+    $ExitCode = $LASTEXITCODE
+
+    if ($ExitCode -ge 8)
+    {
+        throw "Robocopy failed with exit code $ExitCode."
+    }
+
+    Write-Success "Deployment files copied."
+}
+
+#---------------------------------------------------------
+# Apply Configuration
+#---------------------------------------------------------
+
+function Apply-Configuration
+{
+    Write-Section "Applying Configuration"
+
+    $EnvironmentConfig = Join-Path $SitePath $ConfigFile
+
+    if (!(Test-Path $EnvironmentConfig))
+    {
+        throw "Configuration file not found: $EnvironmentConfig"
+    }
+
+    Copy-Item `
+        $EnvironmentConfig `
+        (Join-Path $SitePath "appsettings.json") `
+        -Force
+
+    Write-Success "Configuration applied."
+}
+
+function Test-PublishFolder
+{
+    Write-Section "Validating Published Artifact"
+
+    $RequiredFiles = @(
+        "KenticoSample.Web.dll",
+        "web.config"
+    )
+
+    foreach ($File in $RequiredFiles)
+    {
+        $Path = Join-Path $PublishFolder $File
+
+        if (!(Test-Path $Path))
+        {
+            throw "Required publish file missing: $File"
+        }
+
+        Write-Success "$File found."
+    }
+}
+
+#---------------------------------------------------------
+# Health Check
+#---------------------------------------------------------
+
+function Invoke-HealthCheck
+{
+    Write-Section "Running Health Check"
+
+    try
+    {
+        $response = Invoke-WebRequest `
+            -Uri $HealthCheckUrl `
+            -UseBasicParsing `
+            -TimeoutSec 30
+
+        if ($response.StatusCode -ne 200)
+        {
+            throw "Unexpected HTTP Status: $($response.StatusCode)"
+        }
+
+        Write-Success "Health check passed."
+
+        return $true
+    }
+    catch
+    {
+        Write-ErrorLog $_
+
+        return $false
+    }
+}
+
+#---------------------------------------------------------
+# Rollback
+#---------------------------------------------------------
+
+function Invoke-Rollback
+{
+    Write-Section "Rolling Back Deployment"
+
+    try
+    {
+        Stop-ApplicationPool
+
+        Write-Info "Removing failed deployment..."
+
+        Get-ChildItem `
+            $SitePath `
+            -Force |
+        Where-Object {
+            $_.Name -ne "App_Data"
+        } |
+        Remove-Item `
+            -Recurse `
+            -Force
+
+        Write-Info "Restoring backup..."
+
+        robocopy `
+            $BackupFolder `
+            $SitePath `
+            /E `
+            /R:2 `
+            /W:2 `
+            /NFL `
+            /NDL `
+            /NP | Out-Null
+
+        Apply-Configuration
+
+        Start-ApplicationPool
+
+        if (Invoke-HealthCheck)
+        {
+            $script:RollbackSucceeded = $true
+
+            Write-Success "Rollback completed successfully."
+        }
+        else
+        {
+            throw "Rollback health check failed."
+        }
+    }
+    catch
+    {
+        Write-ErrorLog "Rollback failed."
+
+        throw
+    }
+}
+
+#---------------------------------------------------------
+# Deployment Summary
+#---------------------------------------------------------
+
+function Write-DeploymentSummary
+{
+    $Duration = (Get-Date) - $DeploymentStartTime
+
+    Write-Section "Deployment Summary"
+
+    Write-Info "Environment      : $EnvironmentName"
+    Write-Info "Deployment Id    : $DeploymentId"
+    Write-Info "Duration         : $($Duration.ToString())"
+
+    if ($DeploymentSucceeded)
+    {
+        Write-Success "Deployment completed successfully."
+    }
+    elseif ($RollbackSucceeded)
+    {
+        Write-WarningLog "Deployment failed. Rollback completed successfully."
+    }
+    else
+    {
+        Write-ErrorLog "Deployment failed."
+    }
+}
+
+#=========================================================
+# Main
+#=========================================================
+
+Read-Configuration
+
+Test-Deployment
+
+Test-PublishFolder
+
+Backup-Deployment
+
+try
+{
+    Stop-ApplicationPool
+
+    Clear-DeploymentFolder
+
+    Copy-DeploymentFiles
+
+    Apply-Configuration
+
+    Start-ApplicationPool
+
+    if (!(Invoke-HealthCheck))
+    {
+        throw "Health check failed."
+    }
+
+    $script:DeploymentSucceeded = $true
 }
 catch
 {
-    Write-Host ""
-    Write-Host "=========================================="
-    Write-Host " Deployment Failed"
-    Write-Host "=========================================="
+    Write-ErrorLog $_
+
+    try
+    {
+        Invoke-Rollback
+    }
+    catch
+    {
+        Write-ErrorLog "Automatic rollback failed."
+
+        throw
+    }
 
     throw
+}
+finally
+{
+    Write-DeploymentSummary
 }
