@@ -94,7 +94,7 @@ Write-Info "Started        : $DeploymentStartTime"
 # Read Environment Configuration
 #---------------------------------------------------------
 
-function ReadConfiguration
+function Read-Configuration
 {
     Write-Section "Loading Configuration"
 
@@ -125,7 +125,7 @@ function ReadConfiguration
 # Validate Deployment
 #---------------------------------------------------------
 
-function ValidateDeployment
+function Test-Deployment
 {
     Write-Section "Validating Deployment"
 
@@ -279,6 +279,8 @@ function Copy-DeploymentFiles
 
     $ExitCode = $LASTEXITCODE
 
+    Write-Info "Robocopy Exit Code : $ExitCode"
+
     if ($ExitCode -ge 8)
     {
         throw "Robocopy failed with exit code $ExitCode."
@@ -358,7 +360,7 @@ function Invoke-HealthCheck
     }
     catch
     {
-        Write-ErrorLog $_
+        Write-ErrorLog $_.Exception.Message
 
         return $false
     }
@@ -484,7 +486,7 @@ try
 }
 catch
 {
-    Write-ErrorLog $_
+    Write-ErrorLog $_.Exception.Message
 
     try
     {
