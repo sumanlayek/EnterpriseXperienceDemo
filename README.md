@@ -21,4 +21,4 @@ Troubleshooting
 
 ## Purpose
 
-Learning GitHub Actions, CI/CD and deployment pipeline
+Learning GitHub Actions, CI/CD and deployment pipeline.
