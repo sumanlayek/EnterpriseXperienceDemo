@@ -2,7 +2,8 @@ name: Deploy to QA
 
 on:
   workflow_run:
-    workflows: ["Build"]
+    workflows:
+      - Build
     types:
       - completed
 
@@ -11,6 +12,8 @@ permissions:
 
 jobs:
   deploy:
+    name: Deploy QA
+
     if: >
       ${{
         github.event.workflow_run.conclusion == 'success' &&
@@ -26,19 +29,27 @@ jobs:
       name: QA
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
         with:
           name: KenticoSample.Web
           path: publish
 
-      - name: Display Published Files
+      - name: Verify Publish Folder
         shell: pwsh
         run: |
-          Get-ChildItem publish -Recurse
+          if (!(Test-Path ".\publish")) {
+              throw "Publish folder not found."
+          }
 
-      - name: QA Deployment Placeholder
+          Get-ChildItem .\publish -Recurse
+
+      - name: Deploy QA
         shell: pwsh
         run: |
-          Write-Host "Deploying KenticoSample.Web to QA..."
-          Write-Host "This is where IIS deployment will happen."
+          .\deployment\Deploy.ps1 `
+            -EnvironmentFile ".\deployment\environments\QA.json" `
+            -PublishFolder ".\publish"
