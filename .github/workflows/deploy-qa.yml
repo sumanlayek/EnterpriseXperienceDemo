@@ -35,8 +35,10 @@ jobs:
       - name: Download Build Artifact
         uses: dawidd6/action-download-artifact@v9
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          run_id: ${{ github.event.workflow_run.id }}
+          github_token: ${{ secrets.GH_PAT }}
+          workflow: build.yml
+          workflow_conclusion: success
+          branch: develop
           name: KenticoSample.Web
           path: publish
 
