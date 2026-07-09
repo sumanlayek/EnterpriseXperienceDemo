@@ -4,7 +4,6 @@
 
 function Read-Configuration
 {
-    Write-Section "Loading Configuration"
 
     if (!(Test-Path $EnvironmentFile))
     {
@@ -39,11 +38,20 @@ function Read-Configuration
 	{
 		throw "LogRetentionDays must be greater than zero."
 	}
+}
+
+#---------------------------------------------------------
+# Configuration Summary
+#---------------------------------------------------------
+
+function Write-ConfigurationSummary
+{
+    Write-Section "Loading Configuration"
 
     Write-Info "Environment : $EnvironmentName"
     Write-Info "Site Path   : $SitePath"
     Write-Info "Backup Path : $BackupPath"
     Write-Info "App Pool    : $AppPool"
-	Write-Info "Lock Folder : $LockFolder"
-	Write-Info "Log Folder  : $LogFolder"
+    Write-Info "Lock Folder : $LockFolder"
+    Write-Info "Log Folder  : $LogFolder"
 }
