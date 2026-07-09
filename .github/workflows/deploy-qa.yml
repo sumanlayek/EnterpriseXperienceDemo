@@ -6,6 +6,10 @@ on:
       - Build
     types:
       - completed
+      
+concurrency:
+  group: qa-deployment
+  cancel-in-progress: false
 
 permissions:
   contents: read
