@@ -19,6 +19,7 @@ param
 . "$PSScriptRoot\Modules\IIS.ps1"
 . "$PSScriptRoot\Modules\Deployment.ps1"
 . "$PSScriptRoot\Modules\Health.ps1"
+. "$PSScriptRoot\Modules\Lock.ps1"
 
 #=========================================================
 # Deployment Engine
@@ -145,6 +146,23 @@ catch
 }
 finally
 {
+	#-----------------------------------------------------
+    # Release Deployment Lock
+    #-----------------------------------------------------
+
+    try
+    {
+        Release-DeploymentLock
+    }
+    catch
+    {
+        Write-WarningLog "Unable to release deployment lock."
+		Write-WarningLog $_.Exception.Message
+    }
+
+    #-----------------------------------------------------
+    # Deployment Summary
+    #-----------------------------------------------------
 	
     Write-DeploymentSummary
 

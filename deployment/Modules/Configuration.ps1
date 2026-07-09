@@ -16,12 +16,15 @@ function Read-Configuration
         -Raw |
         ConvertFrom-Json
 
-    $script:EnvironmentName = $config.EnvironmentName
-    $script:SitePath        = $config.SitePath
-    $script:BackupPath      = $config.BackupPath
-    $script:AppPool         = $config.ApplicationPool
-    $script:ConfigFile      = $config.ConfigurationFile
-    $script:HealthCheckUrl  = $config.HealthCheckUrl
+    $script:EnvironmentName 	= $config.EnvironmentName
+    $script:SitePath        	= $config.SitePath
+    $script:BackupPath      	= $config.BackupPath
+    $script:AppPool         	= $config.ApplicationPool
+    $script:ConfigFile      	= $config.ConfigurationFile
+    $script:HealthCheckUrl  	= $config.HealthCheckUrl
+	$script:LockFolder 			= $config.LockFolder
+	$script:LockTimeoutMinutes 	= $config.LockTimeoutMinutes
+	$script:LockFile 			= Join-Path $LockFolder "$EnvironmentName.lock"
 
     Write-Info "Environment : $EnvironmentName"
     Write-Info "Site Path   : $SitePath"
