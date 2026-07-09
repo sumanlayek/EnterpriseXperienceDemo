@@ -46,6 +46,10 @@ jobs:
             src/KenticoSample.Web/KenticoSample.Web.csproj `
             --configuration Release `
             --no-build `
+            --runtime win-x64 `
+            --self-contained false `
+            -p:DebugSymbols=false `
+            -p:DebugType=None `
             --output publish
 
       - name: Verify Xperience CI Repository
@@ -55,18 +59,33 @@ jobs:
               throw "Xperience CI Repository not found."
           }
           
-      - name: Show Publish Folder Size
+      - name: Analyze Publish Output
         shell: pwsh
         run: |
-          $size = (Get-ChildItem publish -Recurse | Measure-Object -Property Length -Sum).Sum
-          $sizeMB = [math]::Round($size / 1MB, 2)
+          $size = (Get-ChildItem publish -Recurse | Measure-Object Length -Sum).Sum
+          Write-Host "Total Publish Size: $([math]::Round($size / 1MB,2)) MB"
 
-          Write-Host "Publish Size: $sizeMB MB"
-
-          Get-ChildItem publish -Recurse |
+          Write-Host ""
+          Write-Host "Top 20 largest files:"
+          Get-ChildItem publish -Recurse -File |
             Sort-Object Length -Descending |
             Select-Object -First 20 FullName,
               @{Name="SizeMB";Expression={[math]::Round($_.Length / 1MB,2)}}
+
+          Write-Host ""
+          Write-Host "Top folders by size:"
+
+          Get-ChildItem publish -Directory |
+            ForEach-Object {
+              $folderSize = (Get-ChildItem $_.FullName -Recurse -File |
+                Measure-Object Length -Sum).Sum
+
+              [PSCustomObject]@{
+                Folder = $_.Name
+                SizeMB = [math]::Round($folderSize / 1MB,2)
+              }
+            } |
+            Sort-Object SizeMB -Descending
 
       - name: Upload Published Artifact
         uses: actions/upload-artifact@v4
