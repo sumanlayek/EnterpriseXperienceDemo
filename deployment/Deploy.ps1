@@ -266,6 +266,8 @@ function Copy-DeploymentFiles
 
     $LogFile = Join-Path $env:TEMP "robocopy.log"
 
+    Write-Info "Log File : $LogFile"
+
     robocopy `
         $PublishFolder `
         $SitePath `
@@ -279,14 +281,17 @@ function Copy-DeploymentFiles
 
     $ExitCode = $LASTEXITCODE
 
-    Write-Info "Robocopy Exit Code : $ExitCode"
+	Write-Info "Robocopy Exit Code : $ExitCode"
 
-    if ($ExitCode -ge 8)
-    {
-        throw "Robocopy failed with exit code $ExitCode."
-    }
+	if ($ExitCode -ge 8)
+	{
+		throw "Robocopy failed with exit code $ExitCode."
+	}
 
-    Write-Success "Deployment files copied."
+	# Reset Robocopy exit code
+	$global:LASTEXITCODE = 0
+
+	Write-Success "Deployment files copied."
 }
 
 #---------------------------------------------------------
@@ -410,7 +415,9 @@ function Invoke-Rollback
         {
             $script:RollbackSucceeded = $true
 
-            Write-Success "Rollback completed successfully."
+			Write-Success "Rollback completed successfully."
+
+			Write-WarningLog "Previous deployment has been restored."
         }
         else
         {
@@ -445,11 +452,19 @@ function Write-DeploymentSummary
     }
     elseif ($RollbackSucceeded)
     {
-        Write-WarningLog "Deployment failed. Rollback completed successfully."
+        Write-WarningLog "Deployment failed."
+
+        Write-WarningLog "Rollback completed successfully."
+
+        Write-WarningLog "Environment restored to previous version."
     }
     else
     {
         Write-ErrorLog "Deployment failed."
+
+        Write-ErrorLog "Rollback failed."
+
+        Write-ErrorLog "Environment requires manual intervention."
     }
 }
 
@@ -495,13 +510,28 @@ catch
     catch
     {
         Write-ErrorLog "Automatic rollback failed."
-
-        throw
     }
-
-    throw
 }
 finally
 {
     Write-DeploymentSummary
+
+    #-----------------------------------------------------
+    # GitHub Actions Exit Code
+    #-----------------------------------------------------
+
+    if ($DeploymentSucceeded)
+    {
+        $global:LASTEXITCODE = 0
+        exit 0
+    }
+
+    if ($RollbackSucceeded)
+    {
+        $global:LASTEXITCODE = 1
+        exit 1
+    }
+
+    $global:LASTEXITCODE = 1
+    exit 1
 }
