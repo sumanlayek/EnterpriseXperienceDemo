@@ -249,6 +249,45 @@ function Start-ApplicationPool
 }
 
 #---------------------------------------------------------
+# Ensure Application Pool is Running
+#---------------------------------------------------------
+
+function Ensure-ApplicationPoolRunning
+{
+    Write-Section "Verifying Application Pool"
+
+    $MaxAttempts = 3
+    $DelaySeconds = 5
+
+    for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++)
+    {
+        $State = (Get-WebAppPoolState -Name $AppPool).Value
+
+        if ($State -eq "Started")
+        {
+            Write-Success "Application Pool is running."
+
+            return
+        }
+
+        Write-WarningLog "Application Pool is '$State'. Attempting to start ($Attempt of $MaxAttempts)..."
+
+        Start-WebAppPool -Name $AppPool
+
+        Start-Sleep -Seconds $DelaySeconds
+    }
+
+    $State = (Get-WebAppPoolState -Name $AppPool).Value
+
+    if ($State -ne "Started")
+    {
+        throw "Application Pool failed to start after $MaxAttempts attempts."
+    }
+
+    Write-Success "Application Pool is running."
+}
+
+#---------------------------------------------------------
 # Clean Deployment Folder
 #---------------------------------------------------------
 
@@ -342,28 +381,44 @@ function Invoke-HealthCheck
 {
     Write-Section "Running Health Check"
 
-    try
-    {
-        $response = Invoke-WebRequest `
-            -Uri $HealthCheckUrl `
-            -UseBasicParsing `
-            -TimeoutSec 30
+    $MaxAttempts = 12
+    $DelaySeconds = 5
 
-        if ($response.StatusCode -ne 200)
+    for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++)
+    {
+        Write-Info "Health Check Attempt $Attempt of $MaxAttempts"
+
+        try
         {
-            throw "Unexpected HTTP Status: $($response.StatusCode)"
+            $Response = Invoke-WebRequest `
+                -Uri $HealthCheckUrl `
+                -UseBasicParsing `
+                -TimeoutSec 10
+
+            if ($Response.StatusCode -eq 200)
+            {
+                Write-Success "Health check passed."
+
+                return $true
+            }
+
+            Write-WarningLog "Received HTTP Status $($Response.StatusCode)"
+        }
+        catch
+        {
+            Write-WarningLog $_.Exception.Message
         }
 
-        Write-Success "Health check passed."
-
-        return $true
+        if ($Attempt -lt $MaxAttempts)
+        {
+            Write-Info "Waiting $DelaySeconds seconds before retry..."
+            Start-Sleep -Seconds $DelaySeconds
+        }
     }
-    catch
-    {
-        Write-ErrorLog $_.Exception.Message
 
-        return $false
-    }
+    Write-ErrorLog "Health check failed after $MaxAttempts attempts."
+
+    return $false
 }
 
 #---------------------------------------------------------
@@ -485,6 +540,8 @@ try
 
     Start-ApplicationPool
 
+	Ensure-ApplicationPoolRunning
+	
     if (!(Invoke-HealthCheck))
     {
         throw "Health check failed."
