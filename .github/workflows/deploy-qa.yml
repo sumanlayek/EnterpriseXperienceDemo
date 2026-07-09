@@ -48,9 +48,30 @@ jobs:
           if (!(Test-Path ".\publish")) {
               throw "Publish folder not found."
           }
-
-          Get-ChildItem .\publish -Recurse
-
+  
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host " Publish Folder Verification"
+          Write-Host "=========================================="
+  
+          Write-Host ""
+          Write-Host "Current Directory:"
+          Get-Location
+  
+          Write-Host ""
+          Write-Host "Resolved Publish Folder:"
+          Resolve-Path ".\publish"
+  
+          Write-Host ""
+          Write-Host "AppSettings Files:"
+          Get-ChildItem ".\publish" -Filter "appsettings*" -Recurse |
+            Select-Object FullName
+  
+          Write-Host ""
+          Write-Host "Top Level Publish Files:"
+          Get-ChildItem ".\publish" |
+            Select-Object Name
+  
       - name: Deploy QA
         shell: pwsh
         run: |

@@ -131,14 +131,14 @@ function Test-Deployment
 
     if (!(Test-Path $PublishFolder))
     {
-        throw "Publish folder does not exist."
+        throw "Publish folder does not exist: $PublishFolder"
     }
 
     Write-Success "Publish folder found."
 
     if (!(Test-Path $SitePath))
     {
-        throw "Deployment folder does not exist."
+        throw "Deployment folder does not exist: $SitePath"
     }
 
     Write-Success "Deployment folder found."
@@ -158,9 +158,22 @@ function Test-Deployment
         Write-Success "Backup folder found."
     }
 
-    if (!(Test-Path "$SitePath\$ConfigFile"))
+    Write-Host ""
+    Write-Info "Publish Folder : $PublishFolder"
+    Write-Info "Configuration  : $ConfigFile"
+
+    Write-Host ""
+    Write-Info "Contents of Publish Folder"
+
+    Get-ChildItem `
+        -Path $PublishFolder |
+    Select-Object Name
+
+    $ConfigurationPath = Join-Path $PublishFolder $ConfigFile
+
+    if (!(Test-Path $ConfigurationPath))
     {
-        throw "Configuration file '$ConfigFile' was not found."
+        throw "Configuration file '$ConfigFile' was not found in the publish folder: $PublishFolder"
     }
 
     Write-Success "Configuration file found."
@@ -302,41 +315,23 @@ function Apply-Configuration
 {
     Write-Section "Applying Configuration"
 
-    $EnvironmentConfig = Join-Path $SitePath $ConfigFile
+    $SourceConfiguration = Join-Path $SitePath $ConfigFile
+    $DestinationConfiguration = Join-Path $SitePath "appsettings.json"
 
-    if (!(Test-Path $EnvironmentConfig))
+    Write-Info "Source      : $SourceConfiguration"
+    Write-Info "Destination : $DestinationConfiguration"
+
+    if (!(Test-Path $SourceConfiguration))
     {
-        throw "Configuration file not found: $EnvironmentConfig"
+        throw "Configuration file '$ConfigFile' was not found in deployment folder."
     }
 
     Copy-Item `
-        $EnvironmentConfig `
-        (Join-Path $SitePath "appsettings.json") `
+        -Path $SourceConfiguration `
+        -Destination $DestinationConfiguration `
         -Force
 
     Write-Success "Configuration applied."
-}
-
-function Test-PublishFolder
-{
-    Write-Section "Validating Published Artifact"
-
-    $RequiredFiles = @(
-        "KenticoSample.Web.dll",
-        "web.config"
-    )
-
-    foreach ($File in $RequiredFiles)
-    {
-        $Path = Join-Path $PublishFolder $File
-
-        if (!(Test-Path $Path))
-        {
-            throw "Required publish file missing: $File"
-        }
-
-        Write-Success "$File found."
-    }
 }
 
 #---------------------------------------------------------

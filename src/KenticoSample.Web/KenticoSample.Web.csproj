@@ -14,6 +14,12 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+  <Content Update="appsettings*.json">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+  </Content>
+  </ItemGroup>
   <!-- Exclude administration parts from the compilation in live-site only deployment  -->
   <ItemGroup Condition="'$(SeparatedAdmin)' == 'true'">
     <Compile Remove="AdminComponents\**" />
