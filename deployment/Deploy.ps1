@@ -14,6 +14,9 @@ param
 . "$PSScriptRoot\Modules\Common.ps1"
 . "$PSScriptRoot\Modules\Configuration.ps1"
 . "$PSScriptRoot\Modules\Validation.ps1"
+. "$PSScriptRoot\Modules\Backup.ps1"
+. "$PSScriptRoot\Modules\Rollback.ps1"
+
 
 #=========================================================
 # Deployment Engine
@@ -56,30 +59,6 @@ Write-Section "Xperience Deployment Engine"
 Write-Info "Version        : $DeploymentVersion"
 Write-Info "Deployment Id  : $DeploymentId"
 Write-Info "Started        : $DeploymentStartTime"
-
-
-#---------------------------------------------------------
-# Backup Deployment
-#---------------------------------------------------------
-
-function Backup-Deployment
-{
-    Write-Section "Creating Backup"
-
-    $TimeStamp = Get-Date -Format "yyyyMMdd_HHmmss"
-
-    $script:BackupFolder = Join-Path $BackupPath $TimeStamp
-
-    Copy-Item `
-        -Path $SitePath `
-        -Destination $BackupFolder `
-        -Recurse `
-        -Force
-
-    Write-Success "Backup created."
-
-    Write-Info "Backup Folder : $BackupFolder"
-}
 
 #---------------------------------------------------------
 # Stop Application Pool
@@ -298,67 +277,6 @@ function Invoke-HealthCheck
     Write-ErrorLog "Health check failed after $MaxAttempts attempts."
 
     return $false
-}
-
-#---------------------------------------------------------
-# Rollback
-#---------------------------------------------------------
-
-function Invoke-Rollback
-{
-    Write-Section "Rolling Back Deployment"
-
-    try
-    {
-        Stop-ApplicationPool
-
-        Write-Info "Removing failed deployment..."
-
-        Get-ChildItem `
-            $SitePath `
-            -Force |
-        Where-Object {
-            $_.Name -ne "App_Data"
-        } |
-        Remove-Item `
-            -Recurse `
-            -Force
-
-        Write-Info "Restoring backup..."
-
-        robocopy `
-            $BackupFolder `
-            $SitePath `
-            /E `
-            /R:2 `
-            /W:2 `
-            /NFL `
-            /NDL `
-            /NP | Out-Null
-
-        Apply-Configuration
-
-        Start-ApplicationPool
-
-        if (Invoke-HealthCheck)
-        {
-            $script:RollbackSucceeded = $true
-
-			Write-Success "Rollback completed successfully."
-
-			Write-WarningLog "Previous deployment has been restored."
-        }
-        else
-        {
-            throw "Rollback health check failed."
-        }
-    }
-    catch
-    {
-        Write-ErrorLog "Rollback failed."
-
-        throw
-    }
 }
 
 #---------------------------------------------------------
