@@ -46,10 +46,6 @@ jobs:
             src/KenticoSample.Web/KenticoSample.Web.csproj `
             --configuration Release `
             --no-build `
-            --runtime win-x64 `
-            --self-contained false `
-            -p:DebugSymbols=false `
-            -p:DebugType=None `
             --output publish
 
       - name: Verify Xperience CI Repository
