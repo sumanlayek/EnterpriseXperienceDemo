@@ -471,8 +471,6 @@ Read-Configuration
 
 Test-Deployment
 
-Test-PublishFolder
-
 Backup-Deployment
 
 try
