@@ -26,9 +26,24 @@ function Read-Configuration
 	$script:LockTimeoutMinutes 	= $config.LockTimeoutMinutes
 	$script:LockFile 			= Join-Path $LockFolder "$EnvironmentName.lock"
 	$script:CurrentLock 		= $null
+	$script:LogFolder 			= Join-Path $config.LogFolder $EnvironmentName
+	$script:LogFile 			= Join-Path $LogFolder "$DeploymentId.log"
+	$script:LogRetentionDays 	= $config.LogRetentionDays
+	
+	if ([string]::IsNullOrWhiteSpace($config.LogFolder))
+	{
+		throw "LogFolder is not configured in the environment configuration."
+	}
+
+	if ($config.LogRetentionDays -le 0)
+	{
+		throw "LogRetentionDays must be greater than zero."
+	}
 
     Write-Info "Environment : $EnvironmentName"
     Write-Info "Site Path   : $SitePath"
     Write-Info "Backup Path : $BackupPath"
     Write-Info "App Pool    : $AppPool"
+	Write-Info "Lock Folder : $LockFolder"
+	Write-Info "Log Folder  : $LogFolder"
 }

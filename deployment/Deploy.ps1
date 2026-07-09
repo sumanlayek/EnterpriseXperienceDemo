@@ -20,6 +20,7 @@ param
 . "$PSScriptRoot\Modules\Deployment.ps1"
 . "$PSScriptRoot\Modules\Health.ps1"
 . "$PSScriptRoot\Modules\Lock.ps1"
+. "$PSScriptRoot\Modules\Logging.ps1"
 
 #=========================================================
 # Deployment Engine
@@ -103,6 +104,8 @@ function Write-DeploymentSummary
 #=========================================================
 
 Read-Configuration
+
+Initialize-Logging
 
 Test-Deployment
 
