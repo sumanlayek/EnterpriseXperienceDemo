@@ -4,5 +4,7 @@
   "BackupPath": "C:\\Backups\\QA",
   "ApplicationPool": "QA",
   "ConfigurationFile": "appsettings.QA.Deployment.json",
-  "HealthCheckUrl": "http://localhost:8002"
+  "HealthCheckUrl": "http://localhost:8002",
+  "LockFolder": "C:\\DeploymentLocks",
+  "LockTimeoutMinutes": 10
 }
