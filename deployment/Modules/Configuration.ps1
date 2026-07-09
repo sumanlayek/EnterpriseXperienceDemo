@@ -25,6 +25,7 @@ function Read-Configuration
 	$script:LockFolder 			= $config.LockFolder
 	$script:LockTimeoutMinutes 	= $config.LockTimeoutMinutes
 	$script:LockFile 			= Join-Path $LockFolder "$EnvironmentName.lock"
+	$script:CurrentLock 		= $null
 
     Write-Info "Environment : $EnvironmentName"
     Write-Info "Site Path   : $SitePath"
