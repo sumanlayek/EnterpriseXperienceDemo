@@ -34,6 +34,11 @@ jobs:
       - name: Restore NuGet Packages
         shell: pwsh
         run: dotnet restore src/KenticoSample.Web.sln
+        
+      - name: List NuGet Packages
+        shell: pwsh
+        run: |
+          dotnet list src/KenticoSample.Web/KenticoSample.Web.csproj package --include-transitive
 
       - name: Build Solution
         shell: pwsh
