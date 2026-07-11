@@ -15,6 +15,52 @@ function Initialize-Logging
     Set-Content -Path $LogFile -Value "" -Encoding UTF8
 
     Write-DeploymentHeader
+	
+	Invoke-LogMaintenance
+}
+
+#---------------------------------------------------------
+# Log Maintenance
+#---------------------------------------------------------
+
+function Invoke-LogMaintenance
+{
+    Write-Section -Title "Log Maintenance"
+
+    Write-Info -Message "Log Folder : $LogFolder"
+    Write-Info -Message "Retention  : $LogRetentionDays days"
+
+    $CutoffDate = (Get-Date).AddDays(-$LogRetentionDays)
+
+    $DeletedFiles = 0
+
+    Get-ChildItem `
+        -Path $LogFolder `
+        -Filter "*.log" `
+        -File `
+        -ErrorAction SilentlyContinue |
+    Where-Object {
+        $_.LastWriteTime -lt $CutoffDate -and
+		$_.Name -ne (Split-Path $LogFile -Leaf)
+    } |
+    ForEach-Object {
+
+        try
+		{
+			Remove-Item `
+				-Path $_.FullName `
+				-Force `
+				-ErrorAction Stop
+
+			$DeletedFiles++
+		}
+		catch
+		{
+			Write-WarningLog -Message "Unable to delete log file: $($_.FullName)"
+		}
+    }
+
+    Write-Success -Message "Deleted $DeletedFiles expired log file(s)."
 }
 
 function Write-DeploymentHeader

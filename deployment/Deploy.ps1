@@ -63,6 +63,8 @@ Read-Configuration
 
 Initialize-Logging
 
+Invoke-LogMaintenance
+
 Write-ConfigurationSummary
 
 Test-Deployment
