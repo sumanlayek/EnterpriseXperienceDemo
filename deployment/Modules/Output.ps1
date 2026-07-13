@@ -174,3 +174,19 @@ function Write-DeploymentSummary
         Write-ErrorLog -Message "Environment requires manual intervention."
     }
 }
+
+#---------------------------------------------------------
+# Update Latest Log
+#---------------------------------------------------------
+
+function Update-LatestLog
+{
+    $LatestLog = Join-Path $LogFolder "latest.log"
+
+    Copy-Item `
+        -Path $LogFile `
+        -Destination $LatestLog `
+        -Force
+
+    Write-Info -Message "Latest Log : $LatestLog"
+}

@@ -128,6 +128,8 @@ finally
     #-----------------------------------------------------
 	
     Write-DeploymentSummary
+	
+	Update-LatestLog
 
     #-----------------------------------------------------
     # GitHub Actions Exit Code
