@@ -12,6 +12,7 @@ param
 #=========================================================
 
 . "$PSScriptRoot\Modules\Output.ps1"
+. "$PSScriptRoot\Modules\Retry.ps1"
 . "$PSScriptRoot\Modules\Configuration.ps1"
 . "$PSScriptRoot\Modules\Validation.ps1"
 . "$PSScriptRoot\Modules\Backup.ps1"
