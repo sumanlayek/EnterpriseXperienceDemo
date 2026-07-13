@@ -30,7 +30,7 @@ function Invoke-WithRetry
 
             if ($Attempt -gt 1)
             {
-                Write-Success -Message "$Operation succeeded on attempt $Attempt."
+                Write-Success -Message "$Operation completed successfully on attempt $Attempt."
             }
 
             return

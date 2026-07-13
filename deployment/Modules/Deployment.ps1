@@ -6,15 +6,23 @@ function Clear-DeploymentFolder
 {
     Write-Section "Cleaning Deployment Folder"
 
-    Get-ChildItem `
-        $SitePath `
-        -Force |
-    Where-Object {
-        $_.Name -ne "App_Data"
-    } |
-    Remove-Item `
-        -Recurse `
-        -Force
+    Invoke-WithRetry `
+        -Operation "Clean deployment folder" `
+        -MaxAttempts 10 `
+        -DelaySeconds 3 `
+        -Action {
+
+            Get-ChildItem `
+                -Path $SitePath `
+                -Force |
+            Where-Object {
+                $_.Name -ne "App_Data"
+            } |
+            Remove-Item `
+                -Recurse `
+                -Force `
+                -ErrorAction Stop
+        }
 
     Write-Success "Deployment folder cleaned."
 }
