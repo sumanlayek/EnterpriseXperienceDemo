@@ -35,34 +35,41 @@ function Copy-DeploymentFiles
 {
     Write-Section "Copying Deployment Files"
 
-    $LogFile = Join-Path $env:TEMP "robocopy.log"
+    $RobocopyLogFile = Join-Path $env:TEMP "robocopy.log"
 
-    Write-Info "Log File : $LogFile"
+    Write-Info "Robocopy Log File : $RobocopyLogFile"
 
-    robocopy `
-        $PublishFolder `
-        $SitePath `
-        /MIR `
-        /R:2 `
-        /W:2 `
-        /NFL `
-        /NDL `
-        /NP `
-        /LOG:$LogFile
+    Invoke-WithRetry `
+        -Operation "Copy deployment files" `
+        -MaxAttempts 5 `
+        -DelaySeconds 5 `
+        -Action {
 
-    $ExitCode = $LASTEXITCODE
+            robocopy `
+                $PublishFolder `
+                $SitePath `
+                /MIR `
+                /R:2 `
+                /W:2 `
+                /NFL `
+                /NDL `
+                /NP `
+                /LOG:$RobocopyLogFile
 
-	Write-Info "Robocopy Exit Code : $ExitCode"
+            $ExitCode = $LASTEXITCODE
 
-	if ($ExitCode -ge 8)
-	{
-		throw "Robocopy failed with exit code $ExitCode."
-	}
+            Write-Info "Robocopy Exit Code : $ExitCode"
 
-	# Reset Robocopy exit code
-	$global:LASTEXITCODE = 0
+            if ($ExitCode -ge 8)
+            {
+                throw "Robocopy failed with exit code $ExitCode."
+            }
 
-	Write-Success "Deployment files copied."
+            # Reset Robocopy exit code
+            $global:LASTEXITCODE = 0
+        }
+
+    Write-Success "Deployment files copied."
 }
 
 #---------------------------------------------------------
