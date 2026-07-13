@@ -50,14 +50,15 @@ jobs:
         shell: pwsh
         run: |
           Expand-Archive `
-          -Path ".\artifacts\KenticoSample.Web.zip" `
-          -DestinationPath ".\publish" `
-          -Force
+            -Path ".\artifacts\KenticoSample.Web.zip" `
+            -DestinationPath ".\publish" `
+            -Force
 
       - name: Verify Publish Folder
         shell: pwsh
         run: |
-          if (!(Test-Path ".\publish")) {
+          if (!(Test-Path ".\publish"))
+          {
               throw "Publish folder not found."
           }
   
