@@ -24,7 +24,7 @@ param
 
 #=========================================================
 # Deployment Engine
-# Version : 1.3.0
+# Version : 1.3.1
 #=========================================================
 
 $ErrorActionPreference = "Stop"
@@ -35,7 +35,7 @@ Import-Module WebAdministration
 # Global Variables
 #---------------------------------------------------------
 
-$DeploymentVersion = "1.3.0"
+$DeploymentVersion = "1.3.1"
 
 $DeploymentId = Get-Date -Format "yyyyMMdd_HHmmss"
 
