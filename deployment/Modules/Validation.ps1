@@ -79,6 +79,10 @@ function Test-Deployment
     }
 
     Write-Success "Configuration file found."
+	
+	Test-ApplicationPool
+
+	Test-IISWebsite
 
     #-----------------------------------------------------
     # Deployment Information
@@ -127,4 +131,41 @@ function Test-Deployment
         -Path $PublishFolder `
         -Filter "appsettings*.json" |
     Select-Object Name
+}
+
+#---------------------------------------------------------
+# Validate Application Pool
+#---------------------------------------------------------
+
+function Test-ApplicationPool
+{
+    Write-Info -Message "Validating Application Pool..."
+
+    if (!(Test-Path "IIS:\AppPools\$AppPool"))
+    {
+        throw "Application Pool '$AppPool' does not exist."
+    }
+
+    Write-Success -Message "Application Pool found."
+}
+
+#---------------------------------------------------------
+# Validate IIS Website
+#---------------------------------------------------------
+
+function Test-IISWebsite
+{
+    Write-Info -Message "Validating IIS Website..."
+
+    $Website = Get-Website |
+        Where-Object {
+            $_.PhysicalPath -eq $SitePath
+        }
+
+    if ($null -eq $Website)
+    {
+        throw "No IIS Website is using '$SitePath'."
+    }
+
+    Write-Success -Message "IIS Website found."
 }
