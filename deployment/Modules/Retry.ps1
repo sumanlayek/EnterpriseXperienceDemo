@@ -1,11 +1,12 @@
 #=========================================================
 # Retry Framework
-# Version : 1.3.1
+# Version : 1.3.2
 #=========================================================
 
 #---------------------------------------------------------
 # Invoke With Retry
 #---------------------------------------------------------
+$script:RetryCount = 0
 
 function Invoke-WithRetry
 {
@@ -43,6 +44,8 @@ function Invoke-WithRetry
             }
 
             Write-WarningLog -Message "$Operation failed."
+			
+			$script:RetryCount++
 
             Write-Info -Message "Attempt : $Attempt of $MaxAttempts"
 

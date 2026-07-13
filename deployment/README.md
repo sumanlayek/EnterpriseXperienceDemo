@@ -35,6 +35,11 @@ PowerShell-based deployment engine for Xperience by Kentico.
 - Retry deployment file copy
 - Retry configuration update
 
+## Observability
+
+- Deployment metrics
+- Retry statistics
+
 ## Current Version
 
-**Deployment Engine v1.3.1**
+**Deployment Engine v1.3.2**
