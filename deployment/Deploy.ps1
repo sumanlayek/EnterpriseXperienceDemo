@@ -11,7 +11,7 @@ param
 # Load Modules
 #=========================================================
 
-. "$PSScriptRoot\Modules\Common.ps1"
+. "$PSScriptRoot\Modules\Output.ps1"
 . "$PSScriptRoot\Modules\Configuration.ps1"
 . "$PSScriptRoot\Modules\Validation.ps1"
 . "$PSScriptRoot\Modules\Backup.ps1"
@@ -23,7 +23,7 @@ param
 
 #=========================================================
 # Deployment Engine
-# Version : 1.1.0
+# Version : 1.3.0
 #=========================================================
 
 $ErrorActionPreference = "Stop"
@@ -34,7 +34,7 @@ Import-Module WebAdministration
 # Global Variables
 #---------------------------------------------------------
 
-$DeploymentVersion = "1.1.0"
+$DeploymentVersion = "1.3.0"
 
 $DeploymentId = Get-Date -Format "yyyyMMdd_HHmmss"
 
@@ -55,54 +55,17 @@ $AppPool = ""
 $ConfigFile = ""
 $HealthCheckUrl = ""
 
-
-Write-Section "Xperience Deployment Engine"
-
-Write-Info "Version        : $DeploymentVersion"
-Write-Info "Deployment Id  : $DeploymentId"
-Write-Info "Started        : $DeploymentStartTime"
-
-#---------------------------------------------------------
-# Deployment Summary
-#---------------------------------------------------------
-
-function Write-DeploymentSummary
-{
-    $Duration = (Get-Date) - $DeploymentStartTime
-
-    Write-Section "Deployment Summary"
-
-    Write-Info "Environment      : $EnvironmentName"
-    Write-Info "Deployment Id    : $DeploymentId"
-    Write-Info "Duration         : $($Duration.ToString())"
-
-    if ($DeploymentSucceeded)
-    {
-        Write-Success "Deployment completed successfully."
-    }
-    elseif ($RollbackSucceeded)
-    {
-        Write-WarningLog "Deployment failed."
-
-        Write-WarningLog "Rollback completed successfully."
-
-        Write-WarningLog "Environment restored to previous version."
-    }
-    else
-    {
-        Write-ErrorLog "Deployment failed."
-
-        Write-ErrorLog "Rollback failed."
-
-        Write-ErrorLog "Environment requires manual intervention."
-    }
-}
-
 #=========================================================
 # Main
 #=========================================================
 
 Read-Configuration
+
+Initialize-Logging
+
+Invoke-LogMaintenance
+
+Write-ConfigurationSummary
 
 Test-Deployment
 
@@ -165,6 +128,8 @@ finally
     #-----------------------------------------------------
 	
     Write-DeploymentSummary
+	
+	Update-LatestLog
 
     #-----------------------------------------------------
     # GitHub Actions Exit Code

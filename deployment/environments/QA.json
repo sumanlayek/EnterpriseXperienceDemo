@@ -6,5 +6,7 @@
   "ConfigurationFile": "appsettings.QA.Deployment.json",
   "HealthCheckUrl": "http://localhost:8002",
   "LockFolder": "C:\\DeploymentLocks",
-  "LockTimeoutMinutes": 10
+  "LockTimeoutMinutes": 10,
+  "LogFolder": "C:\\DeploymentLogs",
+  "LogRetentionDays": 30
 }
