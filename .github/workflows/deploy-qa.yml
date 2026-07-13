@@ -44,7 +44,15 @@ jobs:
           workflow_conclusion: success
           branch: develop
           name: KenticoSample.Web
-          path: publish
+          path: artifacts
+          
+      - name: Extract Build Artifact
+        shell: pwsh
+        run: |
+          Expand-Archive `
+          -Path ".\artifacts\KenticoSample.Web.zip" `
+          -DestinationPath ".\publish" `
+          -Force
 
       - name: Verify Publish Folder
         shell: pwsh

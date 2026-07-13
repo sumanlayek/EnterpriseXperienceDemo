@@ -87,10 +87,18 @@ jobs:
               }
             } |
             Sort-Object SizeMB -Descending
+            
+      - name: Compress Published Output
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path publish\* `
+            -DestinationPath KenticoSample.Web.zip `
+            -Force
 
       - name: Upload Published Artifact
         uses: actions/upload-artifact@v4
         with:
           name: KenticoSample.Web
-          path: publish
-          retention-days: 7
+          path: KenticoSample.Web.zip
+          retention-days: 2
