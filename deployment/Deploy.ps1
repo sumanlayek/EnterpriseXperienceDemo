@@ -12,6 +12,7 @@ param
 #=========================================================
 
 . "$PSScriptRoot\Modules\Output.ps1"
+. "$PSScriptRoot\Modules\Retry.ps1"
 . "$PSScriptRoot\Modules\Configuration.ps1"
 . "$PSScriptRoot\Modules\Validation.ps1"
 . "$PSScriptRoot\Modules\Backup.ps1"
@@ -23,7 +24,7 @@ param
 
 #=========================================================
 # Deployment Engine
-# Version : 1.3.0
+# Version : 1.3.1
 #=========================================================
 
 $ErrorActionPreference = "Stop"
@@ -34,7 +35,7 @@ Import-Module WebAdministration
 # Global Variables
 #---------------------------------------------------------
 
-$DeploymentVersion = "1.3.0"
+$DeploymentVersion = "1.3.1"
 
 $DeploymentId = Get-Date -Format "yyyyMMdd_HHmmss"
 
