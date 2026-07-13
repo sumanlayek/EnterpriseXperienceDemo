@@ -155,6 +155,7 @@ function Write-DeploymentSummary
     Write-Info -Message "Environment      : $EnvironmentName"
     Write-Info -Message "Deployment Id    : $DeploymentId"
     Write-Info -Message "Duration         : $($Duration.ToString())"
+	Write-Info -Message "Retry Count      : $RetryCount"
     Write-Info -Message "Started          : $DeploymentStartTime"
 	Write-Info -Message "Finished         : $(Get-Date)"
 	Write-Info -Message "Server           : $env:COMPUTERNAME"
