@@ -91,10 +91,18 @@ function Apply-Configuration
         throw "Configuration file '$ConfigFile' was not found in deployment folder."
     }
 
-    Copy-Item `
-        -Path $SourceConfiguration `
-        -Destination $DestinationConfiguration `
-        -Force
+    Invoke-WithRetry `
+    -Operation "Apply deployment configuration" `
+    -MaxAttempts 5 `
+    -DelaySeconds 3 `
+    -Action {
 
-    Write-Success "Configuration applied."
+        Copy-Item `
+            -Path $SourceConfiguration `
+            -Destination $DestinationConfiguration `
+            -Force `
+            -ErrorAction Stop
+    }
+
+	Write-Success "Configuration applied."
 }
