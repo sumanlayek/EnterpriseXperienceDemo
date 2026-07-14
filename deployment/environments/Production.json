@@ -4,5 +4,9 @@
   "BackupPath": "C:\\Backups\\Production",
   "ApplicationPool": "Production",
   "ConfigurationFile": "appsettings.Production.Deployment.json",
-  "HealthCheckUrl": "http://localhost:8004"
+  "HealthCheckUrl": "http://localhost:8004",
+  "LockFolder": "C:\\DeploymentLocks",
+  "LockTimeoutMinutes": 30,
+  "LogFolder": "C:\\DeploymentLogs",
+  "LogRetentionDays": 30
 }
