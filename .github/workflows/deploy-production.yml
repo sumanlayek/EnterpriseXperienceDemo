@@ -40,7 +40,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{ secrets.GH_PAT }}
-          workflow: build.yml
+          workflow: build-production.yml
           workflow_conclusion: success
           branch: main
           name: KenticoSample.Web
