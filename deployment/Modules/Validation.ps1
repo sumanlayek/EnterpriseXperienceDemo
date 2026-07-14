@@ -79,6 +79,18 @@ function Test-Deployment
     }
 
     Write-Success "Configuration file found."
+	
+	Test-ApplicationPool
+
+	Test-IISWebsite
+	
+	Test-SitePath
+
+	Test-BackupPath
+
+	Test-LockFolder
+
+	Test-LogFolder
 
     #-----------------------------------------------------
     # Deployment Information
@@ -127,4 +139,161 @@ function Test-Deployment
         -Path $PublishFolder `
         -Filter "appsettings*.json" |
     Select-Object Name
+}
+
+function Test-ApplicationPool
+{
+    Write-Info -Message "Validating Application Pool..."
+
+    try
+    {
+        Get-WebAppPoolState `
+            -Name $AppPool `
+            -ErrorAction Stop | Out-Null
+
+        Write-Success -Message "Application Pool found."
+    }
+    catch
+    {
+        throw "Application Pool '$AppPool' does not exist."
+    }
+}
+
+#---------------------------------------------------------
+# Validate IIS Website
+#---------------------------------------------------------
+
+function Test-IISWebsite
+{
+    Write-Info -Message "Validating IIS Website..."
+
+    $Website = Get-Website |
+        Where-Object {
+            $_.PhysicalPath -eq $SitePath
+        }
+
+    if ($null -eq $Website)
+    {
+        throw "No IIS Website is using '$SitePath'."
+    }
+
+    Write-Success -Message "IIS Website found."
+}
+
+#---------------------------------------------------------
+# Ensure Folder Exists
+#---------------------------------------------------------
+
+function Ensure-FolderExists
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    if (!(Test-Path $Path))
+    {
+        New-Item `
+            -ItemType Directory `
+            -Path $Path `
+            -Force | Out-Null
+
+        Write-Info -Message "$Name created."
+    }
+}
+
+#---------------------------------------------------------
+# Validate Writable Folder
+#---------------------------------------------------------
+
+function Test-WritableFolder
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    Write-Info -Message "Validating $Name..."
+
+    Ensure-FolderExists `
+    -Path $Path `
+    -Name $Name
+
+    $TestFile = Join-Path $Path "write-test.tmp"
+
+    try
+    {
+        Set-Content `
+            -Path $TestFile `
+            -Value "Deployment Engine Test" `
+            -ErrorAction Stop
+
+        Remove-Item `
+            -Path $TestFile `
+            -Force `
+            -ErrorAction Stop
+
+        Write-Success -Message "$Name is writable."
+    }
+    catch
+    {
+        throw "$Name is not writable: $Path"
+    }
+}
+
+#---------------------------------------------------------
+# Validate Site Path
+#---------------------------------------------------------
+
+function Test-SitePath
+{
+    Write-Info -Message "Validating Site Path..."
+
+    if (!(Test-Path $SitePath))
+    {
+        throw "Site path does not exist: $SitePath"
+    }
+
+    Write-Success -Message "Site path found."
+}
+
+#---------------------------------------------------------
+# Validate Backup Path
+#---------------------------------------------------------
+
+function Test-BackupPath
+{
+    Test-WritableFolder `
+        -Path $BackupPath `
+        -Name "Backup Path"
+}
+
+#---------------------------------------------------------
+# Validate Lock Folder
+#---------------------------------------------------------
+
+function Test-LockFolder
+{
+    Test-WritableFolder `
+        -Path $LockFolder `
+        -Name "Lock Folder"
+}
+
+#---------------------------------------------------------
+# Validate Log Folder
+#---------------------------------------------------------
+
+function Test-LogFolder
+{
+    Test-WritableFolder `
+        -Path $LogFolder `
+        -Name "Log Folder"
 }
