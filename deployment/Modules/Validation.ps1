@@ -179,6 +179,32 @@ function Test-IISWebsite
 }
 
 #---------------------------------------------------------
+# Ensure Folder Exists
+#---------------------------------------------------------
+
+function Ensure-FolderExists
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    if (!(Test-Path $Path))
+    {
+        New-Item `
+            -ItemType Directory `
+            -Path $Path `
+            -Force | Out-Null
+
+        Write-Info -Message "$Name created."
+    }
+}
+
+#---------------------------------------------------------
 # Validate Writable Folder
 #---------------------------------------------------------
 
@@ -195,15 +221,9 @@ function Test-WritableFolder
 
     Write-Info -Message "Validating $Name..."
 
-    if (!(Test-Path $Path))
-    {
-        New-Item `
-            -ItemType Directory `
-            -Path $Path `
-            -Force | Out-Null
-
-        Write-Info -Message "$Name created."
-    }
+    Ensure-FolderExists `
+    -Path $Path `
+    -Name $Name
 
     $TestFile = Join-Path $Path "write-test.tmp"
 

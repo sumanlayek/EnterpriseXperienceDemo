@@ -40,6 +40,16 @@ PowerShell-based deployment engine for Xperience by Kentico.
 - Deployment metrics
 - Retry statistics
 
+## Environment Validation
+
+- Validate IIS Application Pool
+- Validate IIS Website
+- Validate Site Path
+- Validate Backup Path
+- Validate Lock Folder
+- Validate Log Folder
+- Verify folder write permissions
+
 ## Current Version
 
-**Deployment Engine v1.3.2**
+**Deployment Engine v1.4.0**
