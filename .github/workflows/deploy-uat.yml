@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-uat:
     name: Deploy UAT
 
     if: >

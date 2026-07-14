@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-production:
     name: Deploy Production
 
     if: >
