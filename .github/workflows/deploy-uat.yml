@@ -1,9 +1,9 @@
-name: Deploy to UAT
+name: 03 Deploy UAT
 
 on:
   workflow_run:
     workflows:
-      - Deploy to QA
+      - 02 Deploy QA
     types:
       - completed
 
