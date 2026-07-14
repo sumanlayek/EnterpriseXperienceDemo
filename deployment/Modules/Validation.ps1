@@ -149,7 +149,9 @@ function Test-ApplicationPool
 {
     Write-Info -Message "Validating Application Pool..."
 
-    if (!(Test-Path "IIS:\AppPools\$AppPool"))
+    $ApplicationPool = Get-IISAppPool -Name $AppPool -ErrorAction SilentlyContinue
+
+    if ($null -eq $ApplicationPool)
     {
         throw "Application Pool '$AppPool' does not exist."
     }
