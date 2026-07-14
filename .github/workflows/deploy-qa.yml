@@ -84,19 +84,6 @@ jobs:
           Write-Host "Top Level Publish Files:"
           Get-ChildItem ".\publish" |
             Select-Object Name
-            
-      - name: Verify IIS
-        shell: pwsh
-        run: |
-          Import-Module WebAdministration
-
-          Write-Host "=== IIS PSDrive ==="
-          Get-PSDrive IIS
-
-          Write-Host ""
-
-          Write-Host "=== Application Pools ==="
-          Get-ChildItem IIS:\AppPools | Select-Object Name
   
       - name: Deploy QA
         shell: pwsh
