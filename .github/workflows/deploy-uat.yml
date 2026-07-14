@@ -1,0 +1,93 @@
+name: Deploy to UAT
+
+on:
+  workflow_run:
+    workflows:
+      - Deploy to QA
+    types:
+      - completed
+
+concurrency:
+  group: uat-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy UAT
+
+    if: >
+      ${{
+        github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.head_branch == 'develop'
+      }}
+
+    runs-on:
+      - self-hosted
+      - Windows
+      - X64
+
+    environment:
+      name: UAT
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifact
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          github_token: ${{ secrets.GH_PAT }}
+          workflow: build.yml
+          workflow_conclusion: success
+          branch: develop
+          name: KenticoSample.Web
+          path: artifacts
+
+      - name: Extract Build Artifact
+        shell: pwsh
+        run: |
+          Expand-Archive `
+            -Path ".\artifacts\KenticoSample.Web.zip" `
+            -DestinationPath ".\publish" `
+            -Force
+
+      - name: Verify Publish Folder
+        shell: pwsh
+        run: |
+          if (!(Test-Path ".\publish"))
+          {
+              throw "Publish folder not found."
+          }
+
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host " Publish Folder Verification"
+          Write-Host "=========================================="
+
+          Write-Host ""
+          Write-Host "Current Directory:"
+          Get-Location
+
+          Write-Host ""
+          Write-Host "Resolved Publish Folder:"
+          Resolve-Path ".\publish"
+
+          Write-Host ""
+          Write-Host "AppSettings Files:"
+          Get-ChildItem ".\publish" -Filter "appsettings*" -Recurse |
+            Select-Object FullName
+
+          Write-Host ""
+          Write-Host "Top Level Publish Files:"
+          Get-ChildItem ".\publish" |
+            Select-Object Name
+
+      - name: Deploy UAT
+        shell: pwsh
+        run: |
+          .\deployment\Deploy.ps1 `
+            -EnvironmentFile ".\deployment\environments\UAT.json" `
+            -PublishFolder ".\publish"

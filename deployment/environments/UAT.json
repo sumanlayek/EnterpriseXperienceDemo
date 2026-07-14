@@ -4,5 +4,9 @@
   "BackupPath": "C:\\Backups\\UAT",
   "ApplicationPool": "UAT",
   "ConfigurationFile": "appsettings.UAT.Deployment.json",
-  "HealthCheckUrl": "http://localhost:8003"
+  "HealthCheckUrl": "http://localhost:8003",
+  "LockFolder": "C:\\DeploymentLocks",
+  "LockTimeoutMinutes": 30,
+  "LogFolder": "C:\\DeploymentLogs",
+  "LogRetentionDays": 30
 }
