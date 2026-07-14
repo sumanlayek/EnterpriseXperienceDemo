@@ -83,6 +83,14 @@ function Test-Deployment
 	Test-ApplicationPool
 
 	Test-IISWebsite
+	
+	Test-SitePath
+
+	Test-BackupPath
+
+	Test-LockFolder
+
+	Test-LogFolder
 
     #-----------------------------------------------------
     # Deployment Information
@@ -168,4 +176,137 @@ function Test-IISWebsite
     }
 
     Write-Success -Message "IIS Website found."
+}
+
+#---------------------------------------------------------
+# Validate Site Path
+#---------------------------------------------------------
+
+function Test-SitePath
+{
+    Write-Info -Message "Validating Site Path..."
+
+    if (!(Test-Path $SitePath))
+    {
+        throw "Site path does not exist: $SitePath"
+    }
+
+    Write-Success -Message "Site path found."
+}
+
+#---------------------------------------------------------
+# Validate Backup Path
+#---------------------------------------------------------
+
+function Test-BackupPath
+{
+    Write-Info -Message "Validating Backup Path..."
+
+    if (!(Test-Path $BackupPath))
+    {
+        New-Item `
+            -ItemType Directory `
+            -Path $BackupPath `
+            -Force | Out-Null
+
+        Write-Info -Message "Backup path created."
+    }
+
+    $TestFile = Join-Path $BackupPath "write-test.tmp"
+
+    try
+    {
+        Set-Content `
+            -Path $TestFile `
+            -Value "Deployment Engine Test" `
+            -ErrorAction Stop
+
+        Remove-Item `
+            -Path $TestFile `
+            -Force
+
+        Write-Success -Message "Backup path is writable."
+    }
+    catch
+    {
+        throw "Backup path is not writable: $BackupPath"
+    }
+}
+
+#---------------------------------------------------------
+# Validate Lock Folder
+#---------------------------------------------------------
+
+function Test-LockFolder
+{
+    Write-Info -Message "Validating Lock Folder..."
+
+    if (!(Test-Path $LockFolder))
+    {
+        New-Item `
+            -ItemType Directory `
+            -Path $LockFolder `
+            -Force | Out-Null
+
+        Write-Info -Message "Lock folder created."
+    }
+
+    $TestFile = Join-Path $LockFolder "write-test.tmp"
+
+    try
+    {
+        Set-Content `
+            -Path $TestFile `
+            -Value "Deployment Engine Test" `
+            -ErrorAction Stop
+
+        Remove-Item `
+            -Path $TestFile `
+            -Force
+
+        Write-Success -Message "Lock folder is writable."
+    }
+    catch
+    {
+        throw "Lock folder is not writable: $LockFolder"
+    }
+}
+
+#---------------------------------------------------------
+# Validate Log Folder
+#---------------------------------------------------------
+
+function Test-LogFolder
+{
+    Write-Info -Message "Validating Log Folder..."
+
+    if (!(Test-Path $LogFolder))
+    {
+        New-Item `
+            -ItemType Directory `
+            -Path $LogFolder `
+            -Force | Out-Null
+
+        Write-Info -Message "Log folder created."
+    }
+
+    $TestFile = Join-Path $LogFolder "write-test.tmp"
+
+    try
+    {
+        Set-Content `
+            -Path $TestFile `
+            -Value "Deployment Engine Test" `
+            -ErrorAction Stop
+
+        Remove-Item `
+            -Path $TestFile `
+            -Force
+
+        Write-Success -Message "Log folder is writable."
+    }
+    catch
+    {
+        throw "Log folder is not writable: $LogFolder"
+    }
 }
