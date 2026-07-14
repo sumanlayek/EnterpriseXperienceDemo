@@ -141,22 +141,22 @@ function Test-Deployment
     Select-Object Name
 }
 
-#---------------------------------------------------------
-# Validate Application Pool
-#---------------------------------------------------------
-
 function Test-ApplicationPool
 {
     Write-Info -Message "Validating Application Pool..."
 
-    $ApplicationPool = Get-IISAppPool -Name $AppPool -ErrorAction SilentlyContinue
+    try
+    {
+        Get-WebAppPoolState `
+            -Name $AppPool `
+            -ErrorAction Stop | Out-Null
 
-    if ($null -eq $ApplicationPool)
+        Write-Success -Message "Application Pool found."
+    }
+    catch
     {
         throw "Application Pool '$AppPool' does not exist."
     }
-
-    Write-Success -Message "Application Pool found."
 }
 
 #---------------------------------------------------------
