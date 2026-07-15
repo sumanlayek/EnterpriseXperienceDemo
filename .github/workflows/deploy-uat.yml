@@ -1,9 +1,9 @@
-name: Deploy to UAT
+name: 03 Deploy UAT
 
 on:
   workflow_run:
     workflows:
-      - Deploy to QA
+      - 02 Deploy QA
     types:
       - completed
 
@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-uat:
     name: Deploy UAT
 
     if: >
@@ -40,7 +40,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{ secrets.GH_PAT }}
-          workflow: build.yml
+          workflow: build-development.yml
           workflow_conclusion: success
           branch: develop
           name: KenticoSample.Web

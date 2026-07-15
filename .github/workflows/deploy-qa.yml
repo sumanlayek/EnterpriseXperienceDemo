@@ -1,9 +1,9 @@
-name: Deploy to QA
+name: 02 Deploy QA
 
 on:
   workflow_run:
     workflows:
-      - Build
+      - 01 Build Development
     types:
       - completed
       
@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-qa:
     name: Deploy QA
 
     if: >
@@ -40,7 +40,7 @@ jobs:
         uses: dawidd6/action-download-artifact@v9
         with:
           github_token: ${{ secrets.GH_PAT }}
-          workflow: build.yml
+          workflow: build-development.yml
           workflow_conclusion: success
           branch: develop
           name: KenticoSample.Web
